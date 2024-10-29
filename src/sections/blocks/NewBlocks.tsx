@@ -4,6 +4,8 @@ import moment from "moment";
 import { useEffect, useState } from "react";
 import { DataTable, DataTableLoading } from "../../components";
 import { usePolkadot } from "../../context";
+import { truncateAddress } from "../../common";
+import { BlockDetails } from "./BlockDetails";
 
 interface Iblocks {
   blockHash: string;
@@ -17,10 +19,11 @@ const NewBlocks = () => {
   const { api } = usePolkadot();
   const [blocks, setBlocks] = useState<Iblocks[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBlock, setSelectedBlock] = useState<number | null>(null);
+  const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-
     const getLatestBlock = async () => {
       if (!api) return;
       try {
@@ -83,15 +86,12 @@ const NewBlocks = () => {
         console.error("Error fetching the latest blocks:", error);
       }
     };
-
     getLatestBlock();
   }, [api]);
 
-  const truncateAddress = (address: string) => {
-    if (!address) return "";
-    if (address.length < 8) return address;
-    const start = address.slice(0, 8); // Get the first 8 characters
-    return `${start}...`; // Concatenate with "..."
+  const selectBlock = (block: number) => {
+    setSelectedBlock(block);
+    setOpenModal(true);
   };
 
   return (
@@ -108,11 +108,12 @@ const NewBlocks = () => {
                 get: (item) => {
                   return (
                     <div className="pl-4 font-bold">
-                      <div className="flex items-center gap-x-2">
-                        <p className=" text-primary font-medium">
-                          #{item.blockNumber}
-                        </p>
-                      </div>
+                      <button
+                        onClick={() => selectBlock(item.blockNumber)}
+                        className=" text-primary font-medium"
+                      >
+                        {item.blockNumber}
+                      </button>
                     </div>
                   );
                 },
@@ -123,10 +124,10 @@ const NewBlocks = () => {
                   const currentTime = moment();
                   const duration = moment.duration(currentTime.diff(pastTime));
 
-                  const minutes = Math.floor(duration.asMinutes());
+                  const sec = Math.floor(duration.asSeconds());
                   return (
                     <div className="font-semibold pl-4 text-table-text">
-                      {minutes == 0 ? "1" : minutes} min ago
+                      {sec} sec ago
                     </div>
                   );
                 },
@@ -153,6 +154,12 @@ const NewBlocks = () => {
           />
         )}
       </div>
+      <BlockDetails
+        openModal={openModal}
+        selectedBlock={selectedBlock}
+        setOpenModal={setOpenModal}
+        setSelectedBlock={setSelectedBlock}
+      />
     </div>
   );
 };

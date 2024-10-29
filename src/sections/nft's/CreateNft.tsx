@@ -31,6 +31,23 @@ const CreateNft: FC<Props> = ({
   const [ipfsUrl, setIpfsUrl] = useState<string | null>(null);
   const [uploadLoading, setUploadLoading] = useState(false);
 
+  const copyToClipboard = async (blockNumber: number) => {
+    try {
+      await navigator.clipboard.writeText(`${blockNumber}`);
+      success("Block Number Copied successfully!");
+    } catch (err) {
+      errorAnnouncement("Failed to copy!");
+    }
+  };
+
+  const getBlockNumber = async (blockHash: string) => {
+    if (!api) return;
+    const signedBlock = await api.rpc.chain.getBlock(blockHash);
+    const blockNumber = signedBlock.block.header.number.toNumber();
+    console.log(`NFT minted successfully in block number: ${blockNumber}`);
+    copyToClipboard(blockNumber);
+  };
+
   const createNft = async (
     collectionId: number,
     nftId: number
@@ -51,6 +68,9 @@ const CreateNft: FC<Props> = ({
             .mint(collectionId, nftId, aliceAccount.address)
             .signAndSend(aliceAccount, ({ status, dispatchError }) => {
               if (status.isInBlock) {
+                const blockHash = status.asInBlock.toString();
+                console.log(`NFT minted successfully in block: ${blockHash}`);
+                getBlockNumber(blockHash);
                 success("NFT minted successfully in block.");
                 resolve("success");
               } else if (status.isFinalized) {

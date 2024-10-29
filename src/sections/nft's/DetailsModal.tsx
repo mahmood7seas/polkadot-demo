@@ -48,7 +48,6 @@ const DetailsModal: FC<Props> = ({
       const tx = api.tx.uniques.burn(collectionId, nftID, ownerMultiAddress);
       const unsub = await tx.signAndSend(signer, ({ status }) => {
         if (status.isInBlock) {
-          console.log(status.toHuman());
           console.log(`Transaction included at blockHash ${status.asInBlock}`);
         } else if (status.isFinalized) {
           console.log(

@@ -9,8 +9,52 @@ import {
   ListOfTokens,
   NewBlocks,
 } from "./sections";
+import { BlockSearch } from "./sections/blocks/BlockSearch";
 
 function App() {
+  // useEffect(() => {
+  //   const fetchTransactions = async () => {
+  //     if (!api) return;
+
+  //     const endBlock = await api.rpc.chain.getHeader();
+  //     const startBlock = endBlock.number.toNumber() - 50;
+
+  //     const allTransactions: any[] = [];
+
+  //     for (let i = startBlock; i <= endBlock.number.toNumber(); i++) {
+  //       const blockHash = await api.rpc.chain.getBlockHash(i);
+  //       const signedBlock = await api.rpc.chain.getBlock(blockHash);
+
+  //       signedBlock.block.extrinsics.forEach(async (extrinsic, index) => {
+  //         const {
+  //           method: { method, section },
+  //           signer,
+  //           args,
+  //         } = extrinsic;
+
+  //         const data = extrinsic;
+
+  //         console.log(data.toHuman());
+
+  //         allTransactions.push({
+  //           id: extrinsic.toHex(),
+  //           blockNumber: i,
+  //           method: `${method}`,
+  //           section: section,
+  //           signer: signer.toString(),
+  //           classId: args[0].toString(),
+  //           instanceId: args[1]?.toString(),
+  //           owner: args[1]?.toString() || args[2]?.toString(),
+  //         });
+  //       });
+  //     }
+
+  //     console.log(allTransactions);
+  //   };
+
+  //   fetchTransactions();
+  // }, [api]);
+
   return (
     <div className="max-h-screen">
       <div className="h-[80vh] border-b overflow-y-auto">
@@ -38,6 +82,11 @@ function App() {
               <Tab className="rounded px-5 w-[full]" title="NFT'S">
                 <div className="px-5 py-5">
                   <ListOfNft />
+                </div>
+              </Tab>
+              <Tab className="rounded px-5 w-[full]" title="Block Details">
+                <div className="px-5 py-5">
+                  <BlockSearch />
                 </div>
               </Tab>
             </Tabs>

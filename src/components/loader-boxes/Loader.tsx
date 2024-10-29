@@ -21,9 +21,9 @@ const Loader: FC<Props> = ({ className = "w-5" }) => {
     >
       <g>
         <circle
-          stroke-dasharray="164.93361431346415 56.97787143782138"
+          strokeDasharray="164.93361431346415 56.97787143782138"
           r="35"
-          stroke-width="10"
+          strokeWidth="10"
           stroke="#4b68cf"
           fill="none"
           cy="50"

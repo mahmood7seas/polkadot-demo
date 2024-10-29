@@ -15,7 +15,6 @@ const ListOfNft = () => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedNft, setSelectedNft] = useState<INftData | null>(null);
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
-  console.log({ selectedNft });
 
   const openDetails = (nft: INftData) => {
     setSelectedNft(nft);
