@@ -4,6 +4,8 @@ import React, { FC, useEffect, useState } from "react";
 import { truncateAddress } from "../../common";
 import { DataTable, DataTableLoading, Modal } from "../../components";
 import { usePolkadot } from "../../context";
+import { ITokens } from "../../types";
+import { TransactionDetails } from "./TransactionDetails";
 
 interface Props {
   openModal: boolean;
@@ -17,10 +19,13 @@ const BlockDetails: FC<Props> = ({
   selectedBlock,
   setOpenModal,
 }) => {
-  const { api } = usePolkadot();
+  const { api, getTokens } = usePolkadot();
   const [blockDetails, setBlockDetails] = useState<any>();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading] = useState(false);
+  const [tokens, setTokens] = useState<ITokens[]>([]);
+  const [openTransactionModal, setOpenTransactionModal] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   const getPayment = async (extrinsic: any, blockHash: any) => {
     if (!api) return;
@@ -37,6 +42,14 @@ const BlockDetails: FC<Props> = ({
     console.log(payment.toHuman());
     // console.log(queryPayment.toHuman());
   };
+
+  useEffect(() => {
+    const getAllTokes = async () => {
+      setTokens(await getTokens());
+    };
+    if (!api) return;
+    getAllTokes();
+  }, [api]);
 
   const fetchTransactionsFromBlock = async (blockNumber: number) => {
     if (!api) return;
@@ -144,155 +157,224 @@ const BlockDetails: FC<Props> = ({
     // setSelectedBlock(null);
   };
 
+  const getToken = (tokenId: string) => {
+    const selectedToken = tokens.find((item) => item.assetId == tokenId);
+    return selectedToken?.metadata.name;
+  };
+
+  const selectTransaction = (transaction: any) => {
+    setSelectedTransaction(transaction);
+    setOpenTransactionModal(true);
+  };
+
   return (
-    <Modal
-      setOpen={close}
-      open={openModal}
-      className="!w-[40rem] border max-h-[600px] overflow-y-auto !border-text-color !text-white !bg-black !p-0"
-    >
-      <div className="border-b border-text-color flex justify-between items-center p-5">
-        <div className="flex items-center gap-x-4">
-          <p>Block Details</p>
-        </div>
-        <button onClick={() => close()}>X</button>
-      </div>
-      <div className="p-5">
-        <p className="text-lg font-bold">Overview</p>
-        <div className="space-y-2 py-3">
-          <div className="font-semibold">
-            <p className="w-[150px] inline-block">Block</p>
-            <p className=" inline-block text-primary">{selectedBlock!}</p>
+    <>
+      <Modal
+        setOpen={close}
+        open={openModal}
+        className="!w-[48rem] border !border-text-color !text-white !bg-black !p-0"
+      >
+        <div className="max-h-[600px] overflow-y-auto">
+          <div className="border-b border-text-color flex justify-between items-center p-5">
+            <div className="flex items-center gap-x-4">
+              <p>Block Details</p>
+            </div>
+            <button onClick={() => close()}>X</button>
           </div>
-          <div className="font-semibold">
-            <p className="w-[150px] inline-block">blockHash</p>
-            <p className=" inline-block text-primary">
-              {truncateAddress(blockDetails?.blockHash!)}
-            </p>
+          <div className="p-5">
+            <p className="text-lg font-bold">Overview</p>
+            <div className="space-y-2 py-3">
+              <div className="font-semibold">
+                <p className="w-[150px] inline-block">Block</p>
+                <p className=" inline-block text-primary">{selectedBlock!}</p>
+              </div>
+              <div className="font-semibold">
+                <p className="w-[150px] inline-block">blockHash</p>
+                <p className=" inline-block text-primary">
+                  {truncateAddress(blockDetails?.blockHash!)}
+                </p>
+              </div>
+              <div className="font-semibold">
+                <p className="w-[150px] inline-block">blockLeader</p>
+                <p className=" inline-block text-primary">
+                  {blockDetails?.blockLeader!}
+                </p>
+              </div>
+              <div className="font-semibold">
+                <p className="w-[150px] inline-block">blockTime</p>
+                <p className=" inline-block text-primary">
+                  {blockDetails?.blockTime}
+                </p>
+              </div>
+              <div className="font-semibold">
+                <p className="w-[150px] inline-block">parentHash</p>
+                <p className=" inline-block text-primary">
+                  {truncateAddress(blockDetails?.parentHash)}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="font-semibold">
-            <p className="w-[150px] inline-block">blockLeader</p>
-            <p className=" inline-block text-primary">
-              {blockDetails?.blockLeader!}
-            </p>
+          <div className="p-5 pt-0">
+            <p className="text-lg font-bold">Transaction</p>
+            <div className="bg-[#D9D9D90A] p-5 rounded-2xl overflow-x-auto">
+              {loading && <DataTableLoading />}
+              {!loading && (
+                <DataTable
+                  tableClassName="min-w-[500px]"
+                  data={transactions}
+                  headers={[
+                    "Signature",
+                    "Block",
+                    "Time ",
+                    "signer",
+                    "target",
+                    "amount",
+                    "token",
+                  ]}
+                  body={[
+                    {
+                      get: (item) => {
+                        return (
+                          <div className="pl-4 font-bold">
+                            <button
+                              onClick={() => selectTransaction(item.toHuman())}
+                              className=" text-primary font-medium"
+                            >
+                              {truncateAddress(item?.signature?.toString())}
+                            </button>
+                          </div>
+                        );
+                      },
+                    },
+                    {
+                      get: () => {
+                        return (
+                          <div className="font-semibold pl-4 text-table-text">
+                            {selectedBlock}
+                          </div>
+                        );
+                      },
+                    },
+                    {
+                      get: () => {
+                        return (
+                          <div className="pl-4 flex items-center text-table-text gap-x-1 font-semibold">
+                            <b>{blockDetails?.blockTime}</b>
+                          </div>
+                        );
+                      },
+                    },
+                    // {
+                    //   get: (item) => {
+                    //     return (
+                    //       <div className="pl-4 font-semibold text-table-text">
+                    //         {truncateAddress(item?.method?.args?.owner?.toString())}
+                    //       </div>
+                    //     );
+                    //   },
+                    // },
+                    {
+                      get: (item) => {
+                        return (
+                          <div className="pl-4 font-semibold text-table-text">
+                            {truncateAddress(item?.signer?.toString())}
+                          </div>
+                        );
+                      },
+                    },
+                    {
+                      get: (item) => {
+                        return (
+                          <div className="pl-4 font-semibold text-table-text">
+                            {item?.toHuman()?.method?.args?.target?.Id
+                              ? truncateAddress(
+                                  item.toHuman()?.method?.args?.target?.Id
+                                )
+                              : "-- -- --"}
+                          </div>
+                        );
+                      },
+                    },
+                    {
+                      get: (item) => {
+                        return (
+                          <div className="pl-4 font-semibold text-table-text">
+                            {item?.toHuman()?.method?.args?.amount
+                              ? item.toHuman()?.method?.args?.amount
+                              : "--"}
+                          </div>
+                        );
+                      },
+                    },
+                    {
+                      get: (item) => {
+                        return (
+                          <div className="pl-4 font-semibold text-table-text">
+                            {item?.toHuman()?.method?.args?.id
+                              ? getToken(item?.toHuman()?.method?.args?.id)
+                              : "--"}
+                          </div>
+                        );
+                      },
+                    },
+                  ]}
+                />
+              )}
+            </div>
           </div>
-          <div className="font-semibold">
-            <p className="w-[150px] inline-block">blockTime</p>
-            <p className=" inline-block text-primary">
-              {blockDetails?.blockTime}
-            </p>
-          </div>
-          <div className="font-semibold">
-            <p className="w-[150px] inline-block">parentHash</p>
-            <p className=" inline-block text-primary">
-              {truncateAddress(blockDetails?.parentHash)}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="p-5 pt-0">
-        <p className="text-lg font-bold">Transaction</p>
-        <div className="bg-[#D9D9D90A] p-5 rounded-2xl overflow-x-auto">
-          {loading && <DataTableLoading />}
-          {!loading && (
-            <DataTable
-              tableClassName="min-w-[450px]"
-              data={transactions}
-              headers={["Signature", "Block", "Time ", "signer"]}
-              body={[
-                {
-                  get: (item) => {
-                    return (
-                      <div className="pl-4 font-bold">
-                        <div className=" text-primary font-medium">
-                          {truncateAddress(item?.signature?.toString())}
+          <div className="p-5 pt-0">
+            <p className="text-lg font-bold">Events</p>
+            <div className="bg-[#D9D9D90A] p-5 rounded-2xl overflow-x-auto">
+              <DataTable
+                tableClassName="min-w-[450px]"
+                data={blockDetails?.events}
+                headers={["method", "section", "index "]}
+                body={[
+                  {
+                    get: (item) => {
+                      return (
+                        <div className="pl-4 font-bold">
+                          <div className=" text-primary font-medium">
+                            {item.method}
+                          </div>
                         </div>
-                      </div>
-                    );
+                      );
+                    },
                   },
-                },
-                {
-                  get: () => {
-                    return (
-                      <div className="font-semibold pl-4 text-table-text">
-                        {selectedBlock}
-                      </div>
-                    );
+                  {
+                    get: (item) => {
+                      return (
+                        <div className="font-semibold pl-4 text-table-text">
+                          {item.section}
+                        </div>
+                      );
+                    },
                   },
-                },
-                {
-                  get: () => {
-                    return (
-                      <div className="pl-4 flex items-center text-table-text gap-x-1 font-semibold">
-                        <b>{blockDetails?.blockTime}</b>
-                      </div>
-                    );
+                  {
+                    get: (item) => {
+                      return (
+                        <div className="pl-4 flex items-center text-table-text gap-x-1 font-semibold">
+                          <b>{item.index}</b>
+                        </div>
+                      );
+                    },
                   },
-                },
-                // {
-                //   get: (item) => {
-                //     return (
-                //       <div className="pl-4 font-semibold text-table-text">
-                //         {truncateAddress(item?.method?.args?.owner?.toString())}
-                //       </div>
-                //     );
-                //   },
-                // },
-                {
-                  get: (item) => {
-                    return (
-                      <div className="pl-4 font-semibold text-table-text">
-                        {truncateAddress(item?.signer?.toString())}
-                      </div>
-                    );
-                  },
-                },
-              ]}
-            />
-          )}
+                ]}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="p-5 pt-0">
-        <p className="text-lg font-bold">Events</p>
-        <div className="bg-[#D9D9D90A] p-5 rounded-2xl overflow-x-auto">
-          <DataTable
-            tableClassName="min-w-[450px]"
-            data={blockDetails?.events}
-            headers={["method", "section", "index "]}
-            body={[
-              {
-                get: (item) => {
-                  return (
-                    <div className="pl-4 font-bold">
-                      <div className=" text-primary font-medium">
-                        {item.method}
-                      </div>
-                    </div>
-                  );
-                },
-              },
-              {
-                get: (item) => {
-                  return (
-                    <div className="font-semibold pl-4 text-table-text">
-                      {item.section}
-                    </div>
-                  );
-                },
-              },
-              {
-                get: (item) => {
-                  return (
-                    <div className="pl-4 flex items-center text-table-text gap-x-1 font-semibold">
-                      <b>{item.index}</b>
-                    </div>
-                  );
-                },
-              },
-            ]}
+        <div>
+          <TransactionDetails
+            openModal={openTransactionModal}
+            setOpenModal={setOpenTransactionModal}
+            selectedTransaction={selectedTransaction}
+            setSelectedTransaction={setSelectedTransaction}
+            tokens={tokens}
           />
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </>
   );
 };
 

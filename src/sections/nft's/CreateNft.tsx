@@ -451,7 +451,7 @@ const CreateNft: FC<Props> = ({
 
           <div className="w-fit m-auto ">
             <button
-              disabled={loading}
+              disabled={loading || uploadLoading}
               type="submit"
               className=" px-5 py-2 rounded bg-white text-primary font-bold"
             >

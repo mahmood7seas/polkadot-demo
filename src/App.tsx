@@ -10,6 +10,7 @@ import {
   NewBlocks,
 } from "./sections";
 import { BlockSearch } from "./sections/blocks/BlockSearch";
+import { TransferToken } from "./sections/transfer-token/TransferToken";
 
 function App() {
   // useEffect(() => {
@@ -87,6 +88,11 @@ function App() {
               <Tab className="rounded px-5 w-[full]" title="Block Details">
                 <div className="px-5 py-5">
                   <BlockSearch />
+                </div>
+              </Tab>
+              <Tab className="rounded px-5 w-[full]" title="Transfer Token">
+                <div className="px-5 py-5">
+                  <TransferToken />
                 </div>
               </Tab>
             </Tabs>
