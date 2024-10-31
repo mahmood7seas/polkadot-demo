@@ -172,7 +172,7 @@ const BlockDetails: FC<Props> = ({
       <Modal
         setOpen={close}
         open={openModal}
-        className="!w-[48rem] border !border-text-color !text-white !bg-black !p-0"
+        className="!w-[55rem] border !border-text-color !text-white !bg-black !p-0"
       >
         <div className="max-h-[600px] overflow-y-auto">
           <div className="border-b border-text-color flex justify-between items-center p-5">
@@ -230,6 +230,8 @@ const BlockDetails: FC<Props> = ({
                     "target",
                     "amount",
                     "token",
+                    "NftItem",
+                    "Collection",
                   ]}
                   body={[
                     {
@@ -264,15 +266,6 @@ const BlockDetails: FC<Props> = ({
                         );
                       },
                     },
-                    // {
-                    //   get: (item) => {
-                    //     return (
-                    //       <div className="pl-4 font-semibold text-table-text">
-                    //         {truncateAddress(item?.method?.args?.owner?.toString())}
-                    //       </div>
-                    //     );
-                    //   },
-                    // },
                     {
                       get: (item) => {
                         return (
@@ -290,7 +283,11 @@ const BlockDetails: FC<Props> = ({
                               ? truncateAddress(
                                   item.toHuman()?.method?.args?.target?.Id
                                 )
-                              : "-- -- --"}
+                              : item?.toHuman()?.method?.args?.dest?.Id
+                              ? truncateAddress(
+                                  item?.toHuman()?.method?.args?.dest?.Id
+                                )
+                              : "----"}
                           </div>
                         );
                       },
@@ -312,6 +309,28 @@ const BlockDetails: FC<Props> = ({
                           <div className="pl-4 font-semibold text-table-text">
                             {item?.toHuman()?.method?.args?.id
                               ? getToken(item?.toHuman()?.method?.args?.id)
+                              : "--"}
+                          </div>
+                        );
+                      },
+                    },
+                    {
+                      get: (item) => {
+                        return (
+                          <div className="pl-4 font-semibold text-table-text">
+                            {item?.toHuman()?.method?.args?.item
+                              ? item?.toHuman()?.method?.args?.item
+                              : "--"}
+                          </div>
+                        );
+                      },
+                    },
+                    {
+                      get: (item) => {
+                        return (
+                          <div className="pl-4 font-semibold text-table-text">
+                            {item?.toHuman()?.method?.args?.collection
+                              ? item?.toHuman()?.method?.args?.collection
                               : "--"}
                           </div>
                         );

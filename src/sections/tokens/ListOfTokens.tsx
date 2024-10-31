@@ -1,11 +1,11 @@
 /** @format */
 
 import { useEffect, useState } from "react";
+import { truncateAddress } from "../../common";
+import { DataTable, DataTableLoading } from "../../components";
 import { usePolkadot } from "../../context";
 import { ITokens } from "../../types";
-import { DataTable, DataTableLoading } from "../../components";
 import { CreateToken } from "./CreateToken";
-import { truncateAddress } from "../../common";
 
 const ListOfTokens = () => {
   const { getTokens, api } = usePolkadot();
@@ -13,15 +13,117 @@ const ListOfTokens = () => {
   const [tokens, setTokens] = useState<ITokens[]>([]);
   const [openModal, setOpenModal] = useState(false);
 
+  const getAllTokes = async () => {
+    setTokens(await getTokens());
+    setLoading(false);
+  };
   useEffect(() => {
     setLoading(true);
-    const getAllTokes = async () => {
-      setTokens(await getTokens());
-      setLoading(false);
-    };
     if (!api) return;
     getAllTokes();
   }, [api]);
+
+  // const burnToken = async (token: ITokens) => {
+  //   setLoading(true);
+
+  //   if (!api) {
+  //     console.log("API is not initialized.");
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const keyring = new Keyring({ type: "sr25519" });
+  //     const adminAccount = keyring.addFromUri("//Alice");
+
+  //     const assetId = +token.assetId;
+  //     const burnAddress = adminAccount;
+  //     const burnAmount = +token.details.deposit.replace(/,/g, "");
+  //     console.log({ assetId });
+  //     console.log({ burnAmount });
+
+  //     if (burnAmount <= 0) {
+  //       throw new Error("Burn amount should be greater than zero.");
+  //     }
+
+  //     const ownerMultiAddress = api.createType(
+  //       "Option<MultiAddress>",
+  //       burnAddress.address
+  //     );
+  //     const compactAmount = api.createType("Compact<u128>", String(burnAmount));
+
+  //     const burnTx = api.tx.assets.burn(
+  //       assetId,
+  //       burnAddress.address,
+  //       compactAmount
+  //     );
+
+  //     const unsub = await burnTx.signAndSend(
+  //       adminAccount,
+  //       ({ status, dispatchError }) => {
+  //         if (status.isInBlock) {
+  //           console.log(
+  //             `Burned ${burnAmount} units of token ${assetId}. Included in block: ${status.asInBlock}`
+  //           );
+  //         } else if (status.isFinalized) {
+  //           console.log(`Burning transaction finalized: ${status.asFinalized}`);
+  //           unsub();
+  //         } else {
+  //           console.log(`Transaction status: ${status.type}`);
+  //         }
+
+  //         if (dispatchError) {
+  //           console.log(`Error: ${dispatchError.toString()}`);
+  //         }
+  //       }
+  //     );
+
+  //     await getAllTokes();
+  //   } catch (error) {
+  //     console.error("Error burning token:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const destroyToken = async (token: ITokens) => {
+  //   if (!api) {
+  //     console.log("API is not initialized.");
+  //     return;
+  //   }
+
+  //   try {
+  //     const keyring = new Keyring({ type: "sr25519" });
+  //     const adminAccount = keyring.addFromUri("//Alice");
+
+  //     // Destroy the token asset
+  //     const destroyTx = api.tx.assets.destroyAccounts(token.assetId);
+
+  //     const unsub = await destroyTx.signAndSend(
+  //       adminAccount,
+  //       ({ status, dispatchError }) => {
+  //         if (status.isInBlock) {
+  //           console.log(
+  //             `Token ${token.assetId} is scheduled for deletion. Included in block: ${status.asInBlock}`
+  //           );
+  //         } else if (status.isFinalized) {
+  //           console.log(
+  //             `Token ${token.assetId} deletion finalized: ${status.asFinalized}`
+  //           );
+  //           unsub();
+  //         } else {
+  //           console.log(`Transaction status: ${status.type}`);
+  //         }
+
+  //         if (dispatchError) {
+  //           console.error(`Error deleting token: ${dispatchError.toString()}`);
+  //         }
+  //       }
+  //     );
+  //   } catch (error) {
+  //     console.error("Error deleting token:", error);
+  //   }
+  // };
 
   return (
     <>
@@ -31,7 +133,15 @@ const ListOfTokens = () => {
           {!loading && (
             <DataTable
               tableClassName="min-w-[500px]"
-              headers={["#", "symbol", "Name", "deposit", "status", "owner"]}
+              headers={[
+                "#",
+                "symbol",
+                "Name",
+                "deposit",
+                "status",
+                "owner",
+                "",
+              ]}
               data={tokens}
               body={[
                 {
@@ -63,7 +173,7 @@ const ListOfTokens = () => {
                   get: (item) => {
                     return (
                       <div className="text-[#4287C0]">
-                        {item.metadata.deposit}
+                        {item.details.deposit}
                       </div>
                     );
                   },
@@ -78,6 +188,18 @@ const ListOfTokens = () => {
                     return <div>{truncateAddress(item.details.owner)}</div>;
                   },
                 },
+                // {
+                //   get: (item) => {
+                //     return (
+                //       <button
+                //         // onClick={() => destroyToken(item)}
+                //         className="text-primary font-semibold"
+                //       >
+                //         burn token
+                //       </button>
+                //     );
+                //   },
+                // },
               ]}
             />
           )}

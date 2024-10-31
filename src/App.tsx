@@ -10,50 +10,27 @@ import {
   NewBlocks,
 } from "./sections";
 import { BlockSearch } from "./sections/blocks/BlockSearch";
+import { TransferNFT } from "./sections/transfer-NFT/TransferNFT";
 import { TransferToken } from "./sections/transfer-token/TransferToken";
 
 function App() {
+  // const { api } = usePolkadot();
+
+  // const accountDetails = async (accountId: string) => {
+  //   if (!api) return;
+  //   const accountData = await api.query.system.account(accountId);
+  //   console.log(accountData.toHuman());
+  //   const accountAssets = await api.query.assets.account(38, accountId);
+  //   console.log(accountAssets.toHuman());
+  //   const accountInfo = await api.query.identity.identityOf(accountId);
+  //   console.log(accountInfo.toHuman());
+  // };
+
   // useEffect(() => {
-  //   const fetchTransactions = async () => {
-  //     if (!api) return;
-
-  //     const endBlock = await api.rpc.chain.getHeader();
-  //     const startBlock = endBlock.number.toNumber() - 50;
-
-  //     const allTransactions: any[] = [];
-
-  //     for (let i = startBlock; i <= endBlock.number.toNumber(); i++) {
-  //       const blockHash = await api.rpc.chain.getBlockHash(i);
-  //       const signedBlock = await api.rpc.chain.getBlock(blockHash);
-
-  //       signedBlock.block.extrinsics.forEach(async (extrinsic, index) => {
-  //         const {
-  //           method: { method, section },
-  //           signer,
-  //           args,
-  //         } = extrinsic;
-
-  //         const data = extrinsic;
-
-  //         console.log(data.toHuman());
-
-  //         allTransactions.push({
-  //           id: extrinsic.toHex(),
-  //           blockNumber: i,
-  //           method: `${method}`,
-  //           section: section,
-  //           signer: signer.toString(),
-  //           classId: args[0].toString(),
-  //           instanceId: args[1]?.toString(),
-  //           owner: args[1]?.toString() || args[2]?.toString(),
-  //         });
-  //       });
-  //     }
-
-  //     console.log(allTransactions);
+  //   const getData = async () => {
+  //     accountDetails(await getAccountDetails("Alice"));
   //   };
-
-  //   fetchTransactions();
+  //   getData();
   // }, [api]);
 
   return (
@@ -93,6 +70,11 @@ function App() {
               <Tab className="rounded px-5 w-[full]" title="Transfer Token">
                 <div className="px-5 py-5">
                   <TransferToken />
+                </div>
+              </Tab>
+              <Tab className="rounded px-5 w-[full]" title="Transfer NFT">
+                <div className="px-5 py-5">
+                  <TransferNFT />
                 </div>
               </Tab>
             </Tabs>

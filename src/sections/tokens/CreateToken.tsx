@@ -122,44 +122,6 @@ const CreateToken: FC<Props> = ({
     }
   };
 
-  // const burnToken = async (tokenId: number) => {
-  //   setLoading(true);
-
-  //   if (!api) return;
-
-  //   try {
-  //     const keyring = new Keyring({ type: "sr25519" });
-  //     const adminAccount = keyring.addFromUri("//Alice");
-
-  //     const assetId = +tokenId; // Specify the asset ID of the token to be burned
-  //     const burnAddress = formData.burnAddress; // Address of the account from which tokens will be burned
-  //     const burnAmount = +formData.burnAmount; // Amount to be burned
-
-  //     // Step 1: Burn the specified amount of tokens
-  //     const burnTx = api.tx.assets.burn(assetId, burnAddress, burnAmount);
-
-  //     await burnTx.signAndSend(adminAccount, ({ status }) => {
-  //       if (status.isInBlock) {
-  //         console.log(
-  //           `Burned ${burnAmount} units of token ${assetId}. Included in block: ${status.asInBlock}`
-  //         );
-  //         success("Tokens burned successfully.");
-  //       } else if (status.isFinalized) {
-  //         console.log(`Burning transaction finalized: ${status.asFinalized}`);
-  //         success("Token burning finalized.");
-  //       }
-  //     });
-
-  //     getAllTokes();
-  //     setLoading(false);
-  //     close();
-  //   } catch (error) {
-  //     console.error("Error burning token:", error);
-  //     tokenError("Failed to burn tokens.");
-  //   } finally {
-  //   }
-  // };
-
   return (
     <>
       <Modal

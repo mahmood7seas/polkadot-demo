@@ -56,7 +56,7 @@ const TransferToken = () => {
     try {
       const keyring = new Keyring({ type: "sr25519" });
       const fromAccount = keyring.addFromUri("//Alice");
-      const toAccount = keyring.addFromUri("//Pop");
+      const toAccount = keyring.addFromUri("//Bob");
       const assetId = formData.token ? +formData.token : +tokens[0].assetId;
       const amount = +formData.amount;
 
