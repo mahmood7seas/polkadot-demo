@@ -133,15 +133,7 @@ const ListOfTokens = () => {
           {!loading && (
             <DataTable
               tableClassName="min-w-[500px]"
-              headers={[
-                "#",
-                "symbol",
-                "Name",
-                "deposit",
-                "status",
-                "owner",
-                "",
-              ]}
+              headers={["#", "symbol", "Name", "supply", "status", "owner", ""]}
               data={tokens}
               body={[
                 {
@@ -173,7 +165,7 @@ const ListOfTokens = () => {
                   get: (item) => {
                     return (
                       <div className="text-[#4287C0]">
-                        {item.details.deposit}
+                        {item.details.supply}
                       </div>
                     );
                   },

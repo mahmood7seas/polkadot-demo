@@ -112,6 +112,7 @@ const TransferNFT = () => {
     let nftAll: any = [];
 
     const accountNfts = await api.query.uniques.account.entries(accountId);
+    console.log(accountNfts);
 
     await Promise.all(
       accountNfts.map(async ([key, _]) => {

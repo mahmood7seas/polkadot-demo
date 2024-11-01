@@ -1,7 +1,7 @@
 /** @format */
 
 import { Keyring } from "@polkadot/api";
-import { FC, useState } from "react";
+import { FC, FormEvent, useState } from "react";
 import { InputField, Modal } from "../../components";
 import { usePolkadot } from "../../context";
 import { Loader } from "../../components/loader-boxes/Loader";
@@ -23,7 +23,7 @@ const CreateToken: FC<Props> = ({
   const { api, getTokens } = usePolkadot();
   const [formData, setFormData] = useState<any>();
   const [loading, setLoading] = useState(false);
-  const { success, error: tokenError } = useAnnouncement();
+  const { success, error: errorAnnouncement } = useAnnouncement();
 
   const handleInputChange = (event: any) => {
     const target = event.target;
@@ -40,85 +40,199 @@ const CreateToken: FC<Props> = ({
     setOpenModal(false);
   };
 
-  const createToken = async (e: any) => {
+  const createToken = async (
+    assetId: number,
+    decimals: number
+  ): Promise<"success" | "failed"> => {
+    if (!api) {
+      console.error("API not initialized.");
+      return "failed";
+    }
+
+    const keyring = new Keyring({ type: "sr25519" });
+    const adminAccount = keyring.addFromUri("//Alice");
+
+    return new Promise(async (resolve) => {
+      try {
+        const createTx = api.tx.assets.create(
+          assetId,
+          adminAccount.address,
+          decimals
+        );
+        await createTx
+          .signAndSend(adminAccount, ({ status, dispatchError }) => {
+            if (status.isInBlock) {
+              console.log(`Token created in block: ${status.asInBlock}`);
+              success("Token created in block");
+              resolve("success");
+            } else if (status.isFinalized) {
+              console.log("Token creation transaction finalized.");
+              success("Token creation transaction finalized.");
+            }
+            if (dispatchError) {
+              handleDispatchError(dispatchError);
+              resolve("failed");
+            }
+          })
+          .catch((error) => {
+            console.error("Token creation failed:", error);
+            errorAnnouncement("Token creation failed");
+            resolve("failed");
+          });
+      } catch (error) {
+        errorAnnouncement("An unexpected error occurred:");
+
+        console.error("An unexpected error occurred:", error);
+        resolve("failed");
+      }
+    });
+  };
+
+  const setTokenMetadata = async (
+    assetId: number,
+    name: string,
+    symbol: string,
+    decimals: number
+  ): Promise<"success" | "failed"> => {
+    if (!api) {
+      console.error("API not initialized.");
+      return "failed";
+    }
+
+    const keyring = new Keyring({ type: "sr25519" });
+    const adminAccount = keyring.addFromUri("//Alice");
+
+    return new Promise(async (resolve) => {
+      try {
+        const metadataTx = api.tx.assets.setMetadata(
+          assetId,
+          name,
+          symbol,
+          decimals
+        );
+        await metadataTx
+          .signAndSend(adminAccount, ({ status, dispatchError }) => {
+            if (status.isInBlock) {
+              console.log(`Metadata set in block: ${status.asInBlock}`);
+              resolve("success");
+            } else if (status.isFinalized) {
+              console.log("Metadata transaction finalized.");
+              success("Metadata transaction finalized.");
+            }
+            if (dispatchError) {
+              handleDispatchError(dispatchError);
+              resolve("failed");
+            }
+          })
+          .catch((error) => {
+            console.error("Metadata setting failed:", error);
+            resolve("failed");
+            errorAnnouncement("Metadata setting failed");
+          });
+      } catch (error) {
+        errorAnnouncement("An unexpected error occurred");
+
+        console.error("An unexpected error occurred:", error);
+        resolve("failed");
+      }
+    });
+  };
+
+  const mintTokenSupply = async (
+    assetId: number,
+    supply: number
+  ): Promise<"success" | "failed"> => {
+    if (!api) {
+      console.error("API not initialized.");
+      return "failed";
+    }
+
+    const keyring = new Keyring({ type: "sr25519" });
+    const adminAccount = keyring.addFromUri("//Alice");
+
+    return new Promise(async (resolve) => {
+      try {
+        const mintTx = api.tx.assets.mint(
+          assetId,
+          adminAccount.address,
+          supply
+        );
+        await mintTx
+          .signAndSend(adminAccount, ({ status, dispatchError }) => {
+            if (status.isInBlock) {
+              console.log(
+                `Minted ${supply} units in block: ${status.asInBlock}`
+              );
+              resolve("success");
+            } else if (status.isFinalized) {
+              console.log("Minting transaction finalized.");
+              success("Minting transaction finalized.");
+            }
+            if (dispatchError) {
+              handleDispatchError(dispatchError);
+              resolve("failed");
+            }
+          })
+          .catch((error) => {
+            console.error("Minting failed:", error);
+            errorAnnouncement("Minting failed");
+
+            resolve("failed");
+          });
+      } catch (error) {
+        console.error("An unexpected error occurred:", error);
+        errorAnnouncement("An unexpected error occurred");
+
+        resolve("failed");
+      }
+    });
+  };
+
+  const createNewToken = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    if (!api) return;
+    const assetId = 30 + tokensLength; // Unique asset ID
+    const decimals = 10;
+    const initialSupply = +formData.initialSupply;
+    const tokenName = formData.name;
+    const tokenSymbol = formData.tokenSymbol;
 
-    try {
-      const keyring = new Keyring({ type: "sr25519" });
-      const adminAccount = keyring.addFromUri("//Alice");
-
-      const assetId = 30 + tokensLength; // Generate a unique asset ID
-      const initialSupply = +formData.initialSupply;
-      const decimals = 10;
-      const tokenName = formData.name;
-      const tokenSymbol = formData.tokenSymbol;
-
-      // Step 1: Create the token
-      const createTx = api.tx.assets.create(
+    const createResult = await createToken(assetId, decimals);
+    if (createResult === "success") {
+      const metadataResult = await setTokenMetadata(
         assetId,
-        adminAccount.address,
+        tokenName,
+        tokenSymbol,
         decimals
       );
-
-      await createTx.signAndSend(adminAccount, async ({ status }) => {
-        if (status.isInBlock) {
-          console.log(
-            `Token created successfully. Included in block: ${status.asInBlock}`
-          );
-          success("Token created successfully.");
-        } else if (status.isFinalized) {
-          console.log(`Transaction finalized: ${status.asFinalized}`);
-          success("Token creation finalized");
-
-          // Step 2: Set the metadata (after token creation)
-          const metadataTx = api.tx.assets.setMetadata(
-            assetId,
-            tokenName,
-            tokenSymbol,
-            decimals
-          );
-          await metadataTx.signAndSend(adminAccount, async ({ status }) => {
-            if (status.isInBlock) {
-              console.log(
-                `Metadata set successfully. Included in block: ${status.asInBlock}`
-              );
-            } else if (status.isFinalized) {
-              console.log(
-                `Metadata transaction finalized: ${status.asFinalized}`
-              );
-              success("Token metadata set successfully");
-            }
-          });
-
-          // Step 3: Mint the initial supply (after setting metadata)
-          const mintTx = api.tx.assets.mint(
-            assetId,
-            adminAccount.address,
-            initialSupply
-          );
-          await mintTx.signAndSend(adminAccount, ({ status }) => {
-            if (status.isInBlock) {
-              console.log(`Minted ${initialSupply} units of the token.`);
-              success("Initial supply minted successfully.");
-            } else if (status.isFinalized) {
-              console.log(
-                `Minting transaction finalized: ${status.asFinalized}`
-              );
-            }
-          });
-
-          getAllTokes();
-          setLoading(false);
+      if (metadataResult === "success") {
+        const mintResult = await mintTokenSupply(assetId, initialSupply);
+        if (mintResult === "success") {
+          await getAllTokes();
           close();
+        } else {
+          errorAnnouncement("Failed to mint initial token supply.");
         }
-      });
-    } catch (error) {
-      console.error("Error creating token:", error);
-      tokenError("Failed to create token.");
-    } finally {
+      } else {
+        errorAnnouncement("Failed to set token metadata.");
+      }
+    } else {
+      errorAnnouncement("Failed to create token.");
+    }
+
+    setLoading(false);
+  };
+
+  // Utility function for handling dispatch errors
+  const handleDispatchError = (dispatchError: any) => {
+    if (!api) return;
+    if (dispatchError.isModule) {
+      const decoded = api.registry.findMetaError(dispatchError.asModule);
+      const { docs, name, section } = decoded;
+      console.error(`Error: ${section}.${name}: ${docs.join(" ")}`);
+    } else {
+      console.error(`Error: ${dispatchError.toString()}`);
     }
   };
 
@@ -135,7 +249,7 @@ const CreateToken: FC<Props> = ({
           </div>
           <button onClick={close}>X</button>
         </div>
-        <form onSubmit={createToken} className="py-5 px-5 space-y-4">
+        <form onSubmit={createNewToken} className="py-5 px-5 space-y-4">
           <InputField
             onChange={handleInputChange}
             name="name"

@@ -1,6 +1,9 @@
 /** @format */
 
+import { useEffect } from "react";
+import { getAccountDetails } from "./common";
 import { Tab, Tabs } from "./components/tabs";
+import { usePolkadot } from "./context";
 import { MainBox } from "./layout";
 import {
   Events,
@@ -14,7 +17,7 @@ import { TransferNFT } from "./sections/transfer-NFT/TransferNFT";
 import { TransferToken } from "./sections/transfer-token/TransferToken";
 
 function App() {
-  // const { api } = usePolkadot();
+  const { api } = usePolkadot();
 
   // const accountDetails = async (accountId: string) => {
   //   if (!api) return;
@@ -26,12 +29,24 @@ function App() {
   //   console.log(accountInfo.toHuman());
   // };
 
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     accountDetails(await getAccountDetails("Alice"));
-  //   };
-  //   getData();
-  // }, [api]);
+  const getAccountToken = async (accountId: string) => {
+    if (!api) return;
+    const assetIds = await api.query.assets.asset.entries();
+    await Promise.all(
+      assetIds.map(async ([key, _]) => {
+        const info: any = key.args.map((k) => k.toHuman());
+        const tok = await api.query.assets.account(info[0], accountId);
+        console.log(tok.toHuman(), `token id ${info[0]}`);
+      })
+    );
+  };
+
+  useEffect(() => {
+    const getData = async () => {
+      getAccountToken(await getAccountDetails("Alice"));
+    };
+    getData();
+  }, [api]);
 
   return (
     <div className="max-h-screen">
